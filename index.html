@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factory Head Dashboard | Command Center</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Flatpickr for Date Picker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link id="flatpickr-theme" rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <style>
+         :root {
+            /* Dark Theme (Premium) */
+            --bg-body: #020617;
+            --bg-card: rgba(15, 23, 42, 0.6);
+            --bg-header: rgba(2, 6, 23, 0.8);
+            --text-main: #f8fafc;
+            --text-muted: #64748b;
+            --border: rgba(255, 255, 255, 0.05);
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.2);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --card-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.5);
+        }
+        
+        [data-theme="light"] {
+            --bg-body: #f1f5f9;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-header: rgba(255, 255, 255, 0.8);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: rgba(0, 0, 0, 0.05);
+            --accent: #2563eb;
+            --accent-glow: rgba(37, 99, 235, 0.1);
+            --card-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+            transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+        }
+        
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(239, 68, 68, 0.05) 0px, transparent 50%);
+        }
+        /* Header */
+        
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-header);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .brand h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        [data-theme="light"] .brand h1 {
+            background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .brand .signature {
+            font-size: 0.7rem;
+            color: var(--accent);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.8;
+        }
+        /* Main Layout */
+        
+        .container {
+            max-width: 1400px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+        }
+        
+        .section-header {
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 3rem;
+        }
+        
+        .section-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+        
+        .divider {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+        /* Filter Bar */
+        
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            align-items: flex-end;
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--card-shadow);
+            backdrop-filter: blur(10px);
+        }
+        
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .filter-group label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .filter-group input {
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            background: var(--bg-body);
+            color: var(--text-main);
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .filter-group input:focus {
+            border-color: var(--accent);
+        }
+        
+        .filter-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
+        /* KPI Cards */
+        
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .kpi-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 2.5rem;
+            border-radius: 1.5rem;
+            box-shadow: var(--card-shadow);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s ease;
+        }
+        
+        .kpi-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--accent);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+        /* Chart Grid */
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 3rem;
+        }
+        
+        .chart-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 2.5rem;
+            border-radius: 2rem;
+            box-shadow: var(--card-shadow);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+        
+        .chart-card.full-width {
+            grid-column: span 2;
+        }
+        
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .chart-title {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+        /* Data Tables */
+        
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .data-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+        
+        .data-table td {
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+        
+        .data-table tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+        
+        [data-theme="light"] .data-table tbody tr:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+        }
+        
+        .problem-cell {
+            max-width: 250px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .highlight-danger {
+            color: var(--danger) !important;
+            font-weight: 600;
+        }
+        
+        .highlight-warning {
+            color: var(--warning) !important;
+            font-weight: 600;
+        }
+        /* Hidden File Input */
+        
+        #fileInput {
+            display: none;
+        }
+        /* Loading Overlay */
+        
+        #loader {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        
+        [data-theme="light"] #loader {
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--border);
+            border-top: 5px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+            .chart-card.full-width {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        window.addEventListener("DOMContentLoaded", () => {
+            if (typeof lucide !== "undefined") {
+                lucide.createIcons();
+            }
+            const uploadContainer = document.getElementById("uploadContainer");
+            const fileInput = document.getElementById("fileInput");
+            if (uploadContainer && fileInput) {
+                uploadContainer.addEventListener("click", () => fileInput.click());
+            }
+            window.addEventListener("error", (e) => {
+                console.error("Runtime error:", e.message);
+            });
+        });
+    </script>
+
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <div id="loader">
+        <div class="spinner"></div>
+        <p style="margin-top: 1rem; color: var(--text-main); font-weight: 600;">Analyzing Factory Data...</p>
+    </div>
+
+    <header>
+        <div class="brand">
+            <h1>Factory Command Center</h1>
+            <div class="signature">Made by Parmita and Kritesh</div>
+        </div>
+        <div class="header-actions" style="display: flex; gap: 1rem; align-items: center;">
+            <div class="theme-toggle" id="themeToggle" style="cursor: pointer; padding: 8px; display: flex; align-items: center; justify-content: center;" title="Switch Theme">
+                <i data-lucide="sun" id="themeIcon"></i>
+            </div>
+            <button onclick="location.reload()" style="background:none; border:1px solid var(--border); color:var(--text-main); padding:0.5rem 1rem; border-radius:8px; cursor:pointer; display: flex; align-items: center;">
+                <i data-lucide="refresh-cw"
+                    style="width:16px; height:16px; margin-right:6px;"></i> New File
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Initial Upload State -->
+        <div id="uploadContainer" class="upload-section" style="border: 2px dashed var(--border); padding: 5rem; border-radius: 2rem; text-align: center; cursor: pointer; transition: all 0.3s ease;">
+            <i data-lucide="upload-cloud" style="width: 48px; height: 48px; color: var(--accent); margin-bottom: 1.5rem;"></i>
+            <h2 style="margin-bottom: 0.5rem;">Upload Factory Excel</h2>
+            <p style="color: var(--text-muted);">Drag and drop your .xlsx or .xls file here, or click to browse</p>
+            <p style="font-size: 0.75rem; margin-top: 1rem; color: var(--accent);">Required Columns: Date, Month, Machine Name, Problem Description, 4M, Loss In MW, Total Downtime</p>
+            <input type="file" id="fileInput" accept=".xlsx, .xls">
+        </div>
+
+        <!-- Dashboard View (Initially Hidden) -->
+        <div id="dashboard" class="dashboard-content" style="display: none;">
+
+            <div class="section-header" style="margin-top: 0;">
+                <div class="section-title">Data Filter</div>
+                <div class="divider"></div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label for="fromDate">From Date</label>
+                    <input type="date" id="fromDate">
+                </div>
+                <div class="filter-group">
+                    <label for="toDate">To Date</label>
+                    <input type="date" id="toDate">
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-primary" id="applyFilter">
+                        <i data-lucide="filter" style="width: 16px; height: 16px;"></i> Apply Filter
+                    </button>
+                    <button class="btn btn-outline" id="resetFilter">
+                        <i data-lucide="x-circle" style="width: 16px; height: 16px;"></i> All Data
+                    </button>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <div class="section-title">Performance Snapshot</div>
+                <div class="divider"></div>
+            </div>
+
+            <!-- KPI Section -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-title" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                        Total Power Loss</div>
+                    <div class="kpi-value" id="kpi-loss" style="font-size: 2rem; font-weight: 700;">0 MW</div>
+                    <div class="kpi-trend" id="trend-loss" style="font-size: 0.8rem; color: var(--accent); margin-top: 0.5rem;">For selected period</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                        Total Downtime</div>
+                    <div class="kpi-value" id="kpi-downtime" style="font-size: 2rem; font-weight: 700;">0 Min</div>
+                    <div class="kpi-trend" id="trend-downtime" style="font-size: 0.8rem; color: var(--accent); margin-top: 0.5rem;">Total operational gap</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                        Avg Loss Per Incident</div>
+                    <div class="kpi-value" id="kpi-avg-loss" style="font-size: 2rem; font-weight: 700;">0 MW</div>
+                    <div class="kpi-trend" style="font-size: 0.8rem; color: var(--accent); margin-top: 0.5rem;">Impact per breakdown</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
+                        Top Bottleneck</div>
+                    <div class="kpi-value" id="kpi-top-machine" style="font-size: 2rem; font-weight: 700;">N/A</div>
+                    <div class="kpi-trend" style="font-size: 0.8rem; color: var(--accent); margin-top: 0.5rem;">Machine with highest loss</div>
+                </div>
+            </div>
+
+            <div class="section-header">
+                <div class="section-title">Deep Dive Analytics</div>
+                <div class="divider"></div>
+            </div>
+
+            <!-- Main Charts -->
+            <div class="chart-grid">
+                <!-- Trend Chart -->
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <div class="chart-title">Loss & Downtime Trend</div>
+                    </div>
+                    <div id="trendChart"></div>
+                </div>
+
+                <!-- Tables Section -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Top 5 Breakdowns (By Downtime)</div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="topBreakdownsTable">
+                            <thead>
+                                <tr>
+                                    <th>Machine</th>
+                                    <th>Problem Description</th>
+                                    <th>Downtime</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Most Frequent Breakdowns</div>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="commonBreakdownsTable">
+                            <thead>
+                                <tr>
+                                    <th>Line</th>
+                                    <th>Machine</th>
+                                    <th>Count</th>
+                                    <th>Downtime</th>
+                                    <th>Loss</th>
+                                    <th>Department</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 4M Distribution -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Root Cause Analysis (4M)</div>
+                    </div>
+                    <div id="donut4M"></div>
+                </div>
+
+                <!-- Pareto Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Top 10 Machines (by Loss MW)</div>
+                    </div>
+                    <div id="paretoChart"></div>
+                </div>
+
+                <!-- Department Breakdown -->
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <div class="chart-title">Downtime by Responsible Department</div>
+                    </div>
+                    <div id="deptChart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Icons
+        if (typeof lucide !== "undefined") {
+            lucide.createIcons();
+        }
+
+        // --- Theme Management ---
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const html = document.documentElement;
+
+        themeToggle.addEventListener('click', () => {
+            const current = html.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', target);
+
+            // Update Icon
+            const iconName = target === 'dark' ? 'sun' : 'moon';
+            themeIcon.setAttribute('data-lucide', iconName);
+            lucide.createIcons();
+
+            // Update Flatpickr Theme
+            const fpTheme = document.getElementById('flatpickr-theme');
+            if (target === 'dark') {
+                fpTheme.href = "https://npmcdn.com/flatpickr/dist/themes/dark.css";
+            } else {
+                fpTheme.href = "https://npmcdn.com/flatpickr/dist/themes/light.css";
+            }
+
+            // Update Charts if they exist
+            updateChartThemes(target);
+        });
+
+        // --- Data Processing Logic ---
+        let charts = {};
+        let globalData = [];
+
+        const fileInput = document.getElementById('fileInput');
+        const uploadContainer = document.getElementById('uploadContainer');
+        const dashboard = document.getElementById('dashboard');
+        const loader = document.getElementById('loader');
+
+        fileInput.addEventListener('change', handleFile);
+
+        // Drag and Drop support
+        uploadContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadContainer.style.borderColor = 'var(--accent)';
+        });
+        uploadContainer.addEventListener('dragleave', () => {
+            uploadContainer.style.borderColor = 'var(--border)';
+        });
+        uploadContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file) processFile(file);
+        });
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if (file) processFile(file);
+        }
+
+        function parseNum(val) {
+            if (typeof val === 'number') return val;
+            if (typeof val === 'string') {
+                const clean = val.replace(/[^0-9.-]/g, "");
+                const num = parseFloat(clean);
+                return isNaN(num) ? 0 : num;
+            }
+            return 0;
+        }
+
+        function parseExcelDate(val) {
+            if (!val) return {
+                obj: null,
+                str: null
+            };
+
+            if (typeof val === 'number') {
+                const d = new Date((val - (25567 + 1)) * 86400 * 1000);
+                return {
+                    obj: d,
+                    str: d.toISOString().split('T')[0]
+                };
+            } else if (typeof val === 'string') {
+                // simple split by common separators
+                const parts = val.split(/[-/.]/);
+                let d;
+                if (parts.length === 3) {
+                    // Try to guess DD/MM/YYYY
+                    if (parts[0].length <= 2 && parts[1].length <= 2 && parts[2].length === 4) {
+                        d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                    } else {
+                        d = new Date(val);
+                    }
+                } else {
+                    d = new Date(val);
+                }
+
+                if (!isNaN(d.getTime())) {
+                    return {
+                        obj: d,
+                        str: d.toISOString().split('T')[0]
+                    };
+                }
+            }
+            return {
+                obj: null,
+                str: null
+            };
+        }
+
+        function processFile(file) {
+            loader.style.display = 'flex';
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {
+                        type: 'array'
+                    });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+
+                    if (!jsonData || jsonData.length === 0) {
+                        throw new Error("Excel file is empty or headers are missing.");
+                    }
+
+                    parseGlobalData(jsonData);
+
+                } catch (err) {
+                    loader.style.display = 'none';
+                    alert("Error: " + err.message + "\nPlease ensure your Excel file has the correct headers.");
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parseGlobalData(data) {
+            globalData = data.map(row => {
+                const clean = {
+                    machine: 'Unknown',
+                    m4: 'N/A',
+                    loss: 0,
+                    downtime: 0,
+                    month: 'Unknown',
+                    problem: 'Unknown',
+                    dateObj: null,
+                    dateStr: null
+                };
+                for (let key in row) {
+                    const upper = key.toUpperCase().trim();
+                    if (upper === 'DATE' || upper.includes(' DATE')) {
+                        const parsedDate = parseExcelDate(row[key]);
+                        clean.dateObj = parsedDate.obj;
+                        clean.dateStr = parsedDate.str;
+                    }
+                    if (upper === 'MONTH') clean.month = row[key];
+                    if (upper === 'MACHINE NAME' || upper === 'MACHINE') clean.machine = row[key];
+                    if (upper.includes('4M')) clean.m4 = row[key];
+                    if (upper.includes('LOSS')) clean.loss = parseNum(row[key]);
+                    if (upper.includes('DOWNTIME')) clean.downtime = parseNum(row[key]);
+                    if (upper.includes('DEPARTMENT')) clean.dept = row[key];
+                    if (upper.includes('PROBLEM')) clean.problem = row[key];
+                }
+                return clean;
+            });
+
+            // Set default date range if possible
+            let dates = globalData.map(d => d.dateStr).filter(d => d);
+            if (dates.length > 0) {
+                dates.sort();
+                document.getElementById('fromDate')._flatpickr.setDate(dates[0]);
+                document.getElementById('toDate')._flatpickr.setDate(dates[dates.length - 1]);
+            }
+
+            applyFilters();
+
+            uploadContainer.style.display = 'none';
+            dashboard.style.display = 'block';
+            loader.style.display = 'none';
+        }
+
+        // Filter Logic
+        flatpickr("#fromDate", {
+            dateFormat: "Y-m-d"
+        });
+        flatpickr("#toDate", {
+            dateFormat: "Y-m-d"
+        });
+
+        document.getElementById('applyFilter').addEventListener('click', applyFilters);
+        document.getElementById('resetFilter').addEventListener('click', () => {
+            document.getElementById('fromDate')._flatpickr.clear();
+            document.getElementById('toDate')._flatpickr.clear();
+            applyFilters();
+        });
+
+        function applyFilters() {
+            const from = document.getElementById('fromDate').value;
+            const to = document.getElementById('toDate').value;
+
+            let filtered = globalData;
+            if (from || to) {
+                filtered = globalData.filter(r => {
+                    if (!r.dateStr) return true; // Include items without dates so they aren't lost
+                    let pass = true;
+                    if (from) pass = pass && (r.dateStr >= from);
+                    if (to) pass = pass && (r.dateStr <= to);
+                    return pass;
+                });
+            }
+
+            updateDashboard(filtered);
+        }
+
+        function updateDashboard(data) {
+            updateKPIs(data);
+            renderTables(data);
+            renderCharts(data);
+        }
+
+        function updateKPIs(data) {
+            const totalLoss = data.reduce((sum, r) => sum + r.loss, 0);
+            const totalDowntime = data.reduce((sum, r) => sum + r.downtime, 0);
+            const avgLoss = data.length > 0 ? (totalLoss / data.length) : 0;
+
+            const mDataMap = {};
+            data.forEach(r => {
+                if (r.machine && r.machine !== 'Unknown') {
+                    mDataMap[r.machine] = (mDataMap[r.machine] || 0) + r.loss;
+                }
+            });
+            const topMachineEntry = Object.entries(mDataMap).sort((a, b) => b[1] - a[1])[0];
+            const topMachine = topMachineEntry ? topMachineEntry[0] : 'N/A';
+
+            document.getElementById('kpi-loss').innerText = totalLoss.toLocaleString(undefined, {
+                maximumFractionDigits: 1
+            }) + ' MW';
+
+            const hours = (totalDowntime / 60).toFixed(1);
+            document.getElementById('kpi-downtime').innerText = `${totalDowntime.toLocaleString()} Min`;
+            document.getElementById('trend-downtime').innerText = `${hours} Hours total downtime`;
+
+            document.getElementById('kpi-avg-loss').innerText = avgLoss.toFixed(2) + ' MW';
+            document.getElementById('kpi-top-machine').innerText = topMachine;
+        }
+
+        function renderTables(data) {
+            // 1. Top 5 Breakdowns by Downtime
+            const sortedIncidents = [...data].sort((a, b) => b.downtime - a.downtime).slice(0, 5);
+            const topBreakdownsTbody = document.querySelector("#topBreakdownsTable tbody");
+            topBreakdownsTbody.innerHTML = '';
+
+            sortedIncidents.forEach(inc => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${inc.machine || 'N/A'}</td>
+                    <td class="problem-cell" title="${inc.problem || 'N/A'}">${inc.problem || 'N/A'}</td>
+                    <td class="highlight-danger">${inc.downtime} Min</td>
+                `;
+                topBreakdownsTbody.appendChild(tr);
+            });
+
+            if (sortedIncidents.length === 0) {
+                topBreakdownsTbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No data available</td></tr>';
+            }
+
+            // 2. Most common breakdowns machine-wise
+            const machineFreq = {};
+            data.forEach(r => {
+                if (r.machine && r.machine !== 'Unknown') {
+                    if (!machineFreq[r.machine]) {
+                        machineFreq[r.machine] = {
+                            count: 0,
+                            downtime: 0,
+                            loss: 0,
+                            dept: r.dept || '-'
+                        };
+                    }
+                    machineFreq[r.machine].count += 1;
+                    machineFreq[r.machine].downtime += r.downtime;
+                    machineFreq[r.machine].loss += r.loss;
+                    machineFreq[r.machine].dept = r.dept || machineFreq[r.machine].dept;
+                }
+            });
+
+            const sortedMachines = Object.entries(machineFreq)
+                .sort((a, b) => b[1].count - a[1].count)
+                .slice(0, 5);
+
+            const commonBreakdownsTbody = document.querySelector("#commonBreakdownsTable tbody");
+            commonBreakdownsTbody.innerHTML = '';
+
+            sortedMachines.forEach(([machine, stats], index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${machine}</td>
+                    <td class="highlight-warning">${stats.count}</td>
+                    <td>${stats.downtime.toFixed(0)} Min</td>
+                    <td>${(stats.loss || 0).toFixed(1)} MW</td>
+                    <td>${stats.dept || '-'}</td>
+                `;
+                commonBreakdownsTbody.appendChild(tr);
+            });
+
+            if (sortedMachines.length === 0) {
+                commonBreakdownsTbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No data available</td></tr>';
+            }
+        }
+
+        function destroyCharts() {
+            if (charts.trend) charts.trend.destroy();
+            if (charts.donut) charts.donut.destroy();
+            if (charts.pareto) charts.pareto.destroy();
+            if (charts.dept) charts.dept.destroy();
+        }
+
+        function renderCharts(data) {
+            destroyCharts();
+
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const theme = isDark ? 'dark' : 'light';
+
+            const commonOptions = {
+                chart: {
+                    background: 'transparent',
+                    toolbar: {
+                        show: false
+                    }
+                },
+                theme: {
+                    mode: theme
+                },
+                grid: {
+                    borderColor: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
+                }
+            };
+
+            // Trend Chart
+            const timeMap = {};
+            data.forEach(r => {
+                // Group by date if available, otherwise by month
+                const key = r.dateStr || r.month || 'Unknown';
+                if (!timeMap[key]) timeMap[key] = {
+                    loss: 0,
+                    downtime: 0
+                };
+                timeMap[key].loss += r.loss;
+                timeMap[key].downtime += r.downtime;
+            });
+
+            // Sort keys if they are dates
+            const timeKeys = Object.keys(timeMap).sort();
+
+            charts.trend = new ApexCharts(document.querySelector("#trendChart"), {
+                ...commonOptions,
+                series: [{
+                    name: 'Loss (MW)',
+                    type: 'area',
+                    data: timeKeys.map(k => timeMap[k].loss.toFixed(1))
+                }, {
+                    name: 'Downtime (Min)',
+                    type: 'line',
+                    data: timeKeys.map(k => timeMap[k].downtime)
+                }],
+                chart: {...commonOptions.chart,
+                    height: 350,
+                    type: 'line'
+                },
+                colors: ['#3b82f6', '#f59e0b'],
+                stroke: {
+                    width: [4, 4],
+                    curve: 'smooth'
+                },
+                // FIX: Apply gradient only to area chart (Loss), solid line for Downtime
+                fill: {
+                    type: ['gradient', 'solid'],
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.6,
+                        opacityTo: 0.1
+                    }
+                },
+                xaxis: {
+                    categories: timeKeys,
+                    labels: {
+                        formatter: function(val) {
+                            if (!val) return val;
+                            const d = new Date(val);
+                            if (!isNaN(d.getTime())) {
+                                return d.toLocaleDateString('en-GB', {
+                                    day: '2-digit',
+                                    month: 'short'
+                                });
+                            }
+                            // Fallback if not a date
+                            if (val.length > 10) return val.substring(0, 10);
+                            return val;
+                        }
+                    }
+                },
+                yaxis: [{
+                    title: {
+                        text: 'Loss MW'
+                    }
+                }, {
+                    opposite: true,
+                    title: {
+                        text: 'Downtime Min'
+                    }
+                }]
+            });
+
+            // 4M Donut
+            const m4Map = {};
+            data.forEach(r => {
+                if (r.m4 && r.m4 !== 'N/A') m4Map[r.m4] = (m4Map[r.m4] || 0) + 1;
+            });
+
+            charts.donut = new ApexCharts(document.querySelector("#donut4M"), {
+                ...commonOptions,
+                series: Object.values(m4Map),
+                chart: {...commonOptions.chart,
+                    type: 'donut',
+                    height: 350
+                },
+                labels: Object.keys(m4Map),
+                colors: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'],
+                legend: {
+                    position: 'bottom'
+                },
+                stroke: {
+                    show: false
+                }
+            });
+
+            // Pareto Chart
+            const mParetoMap = {};
+            data.forEach(r => {
+                if (r.machine && r.machine !== 'Unknown') mParetoMap[r.machine] = (mParetoMap[r.machine] || 0) + r.loss;
+            });
+            const sortedMachines = Object.entries(mParetoMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+            charts.pareto = new ApexCharts(document.querySelector("#paretoChart"), {
+                ...commonOptions,
+                series: [{
+                    name: 'Loss MW',
+                    data: sortedMachines.map(s => s[1].toFixed(1))
+                }],
+                chart: {...commonOptions.chart,
+                    type: 'bar',
+                    height: 350
+                },
+                plotOptions: {
+                    bar: {
+                        borderRadius: 6,
+                        horizontal: true,
+                        barHeight: '60%'
+                    }
+                },
+                colors: ['#ef4444'],
+                xaxis: {
+                    categories: sortedMachines.map(s => s[0])
+                }
+            });
+
+            // Department Chart
+            const deptMap = {};
+            data.forEach(r => {
+                if (r.dept) deptMap[r.dept] = (deptMap[r.dept] || 0) + r.downtime;
+            });
+
+            charts.dept = new ApexCharts(document.querySelector("#deptChart"), {
+                ...commonOptions,
+                series: [{
+                    name: 'Total Downtime',
+                    data: Object.values(deptMap)
+                }],
+                chart: {...commonOptions.chart,
+                    type: 'bar',
+                    height: 300
+                },
+                xaxis: {
+                    categories: Object.keys(deptMap)
+                },
+                yaxis: {
+                    logarithmic: true,
+                    title: {
+                        text: 'Downtime (Log Scale)'
+                    }
+                },
+                colors: ['#8b5cf6'],
+                plotOptions: {
+                    bar: {
+                        borderRadius: 6,
+                        columnWidth: '40%'
+                    }
+                }
+            });
+
+            Object.values(charts).forEach(c => c.render());
+        }
+
+        function updateChartThemes(theme) {
+            Object.values(charts).forEach(c => {
+                if (c && c.updateOptions) {
+                    c.updateOptions({
+                        theme: {
+                            mode: theme
+                        }
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
