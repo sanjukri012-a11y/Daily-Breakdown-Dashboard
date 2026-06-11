@@ -400,8 +400,8 @@
 
     <header>
         <div class="brand">
-            <h1>Factory Command Center</h1>
-            <div class="signature"> Deployed by Sanju </div>
+            <h1>Live Breakdown Dashboard</h1>
+
         </div>
         <div class="header-actions" style="display: flex; gap: 1rem; align-items: center;">
             <div class="theme-toggle" id="themeToggle" style="cursor: pointer; padding: 8px; display: flex; align-items: center; justify-content: center;" title="Switch Theme">
@@ -461,7 +461,7 @@
             <div class="kpi-grid">
                 <div class="kpi-card">
                     <div class="kpi-title" style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;">
-                        Total Loss in MW</div>
+                        Loss in MW </div>
                     <div class="kpi-value" id="kpi-loss" style="font-size: 2rem; font-weight: 700;">0 MW</div>
                     <div class="kpi-trend" id="trend-loss" style="font-size: 0.8rem; color: var(--accent); margin-top: 0.5rem;">For selected period</div>
                 </div>
@@ -509,9 +509,12 @@
                         <table class="data-table" id="topBreakdownsTable">
                             <thead>
                                 <tr>
+                                    <th>Line</th>
                                     <th>Machine</th>
-                                    <th>Problem Description</th>
+
                                     <th>Downtime</th>
+
+
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -711,35 +714,57 @@
         function parseGlobalData(data) {
             globalData = data.map(row => {
                 const clean = {
+                    line: '-',
                     machine: 'Unknown',
                     m4: 'N/A',
                     loss: 0,
                     downtime: 0,
                     month: 'Unknown',
                     problem: 'Unknown',
+                    dept: '-',
                     dateObj: null,
                     dateStr: null
                 };
+
                 for (let key in row) {
                     const upper = key.toUpperCase().trim();
+
                     if (upper === 'DATE' || upper.includes(' DATE')) {
                         const parsedDate = parseExcelDate(row[key]);
                         clean.dateObj = parsedDate.obj;
                         clean.dateStr = parsedDate.str;
                     }
-                    if (upper === 'MONTH') clean.month = row[key];
-                    if (upper === 'MACHINE NAME' || upper === 'MACHINE') clean.machine = row[key];
-                    if (upper.includes('4M')) clean.m4 = row[key];
-                    if (upper.includes('LOSS')) clean.loss = parseNum(row[key]);
-                    if (upper.includes('DOWNTIME')) clean.downtime = parseNum(row[key]);
-                    if (upper.includes('DEPARTMENT')) clean.dept = row[key];
-                    if (upper.includes('PROBLEM')) clean.problem = row[key];
+
+                    if (upper === 'MONTH')
+                        clean.month = row[key];
+
+                    if (upper === 'LINE' || upper.includes('LINE'))
+                        clean.line = row[key];
+
+                    if (upper === 'MACHINE NAME' || upper === 'MACHINE')
+                        clean.machine = row[key];
+
+                    if (upper.includes('4M'))
+                        clean.m4 = row[key];
+
+                    if (upper.includes('LOSS'))
+                        clean.loss = parseNum(row[key]);
+
+                    if (upper.includes('DOWNTIME'))
+                        clean.downtime = parseNum(row[key]);
+
+                    if (upper.includes('DEPARTMENT'))
+                        clean.dept = row[key];
+
+                    if (upper.includes('PROBLEM'))
+                        clean.problem = row[key];
                 }
+
                 return clean;
             });
 
-            // Set default date range if possible
             let dates = globalData.map(d => d.dateStr).filter(d => d);
+
             if (dates.length > 0) {
                 dates.sort();
                 document.getElementById('fromDate')._flatpickr.setDate(dates[0]);
@@ -752,7 +777,6 @@
             dashboard.style.display = 'block';
             loader.style.display = 'none';
         }
-
         // Filter Logic
         flatpickr("#fromDate", {
             dateFormat: "Y-m-d"
@@ -840,42 +864,65 @@
 
             // 2. Most common breakdowns machine-wise
             const machineFreq = {};
+
             data.forEach(r => {
+
+                const key = `${r.line}|${r.machine}`;
+
                 if (r.machine && r.machine !== 'Unknown') {
-                    if (!machineFreq[r.machine]) {
-                        machineFreq[r.machine] = {
+
+                    if (!machineFreq[key]) {
+
+                        machineFreq[key] = {
+                            line: r.line || '-',
+                            machine: r.machine,
                             count: 0,
                             downtime: 0,
                             loss: 0,
                             dept: r.dept || '-'
                         };
                     }
-                    machineFreq[r.machine].count += 1;
-                    machineFreq[r.machine].downtime += r.downtime;
-                    machineFreq[r.machine].loss += r.loss;
-                    machineFreq[r.machine].dept = r.dept || machineFreq[r.machine].dept;
+
+                    machineFreq[key].count += 1;
+                    machineFreq[key].downtime += r.downtime;
+                    machineFreq[key].loss += r.loss;
                 }
             });
 
-            const sortedMachines = Object.entries(machineFreq)
-                .sort((a, b) => b[1].count - a[1].count)
+            const sortedMachines = Object.values(machineFreq)
+                .sort((a, b) => b.count - a.count)
                 .slice(0, 5);
 
-            const commonBreakdownsTbody = document.querySelector("#commonBreakdownsTable tbody");
+            const commonBreakdownsTbody =
+                document.querySelector("#commonBreakdownsTable tbody");
+
             commonBreakdownsTbody.innerHTML = '';
 
-            sortedMachines.forEach(([machine, stats], index) => {
+            sortedMachines.forEach(stats => {
+
                 const tr = document.createElement('tr');
+
                 tr.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${machine}</td>
-                    <td class="highlight-warning">${stats.count}</td>
-                    <td>${stats.downtime.toFixed(0)} Min</td>
-                    <td>${(stats.loss || 0).toFixed(1)} MW</td>
-                    <td>${stats.dept || '-'}</td>
-                `;
+        <td>${stats.line}</td>
+        <td>${stats.machine}</td>
+        <td class="highlight-warning">${stats.count}</td>
+        <td>${stats.downtime.toFixed(0)} Min</td>
+        <td>${stats.loss.toFixed(1)} MW</td>
+        <td>${stats.dept}</td>
+    `;
+
                 commonBreakdownsTbody.appendChild(tr);
             });
+
+            if (sortedMachines.length === 0) {
+                commonBreakdownsTbody.innerHTML = `
+        <tr>
+            <td colspan="6" style="text-align:center;">
+                No Data Available
+            </td>
+        </tr>
+    `;
+            }
 
             if (sortedMachines.length === 0) {
                 commonBreakdownsTbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No data available</td></tr>';
