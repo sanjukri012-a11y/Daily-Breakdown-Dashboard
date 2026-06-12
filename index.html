@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+DOCTYPE html>
 <html lang="en" data-theme="dark">
 
 <head>
@@ -747,9 +747,11 @@
                     if (upper.includes('4M'))
                         clean.m4 = row[key];
 
-                    if (upper.includes('LOSS'))
+                    if (
+                        upper.includes('LOSS') ||
+                        upper.includes('LOSS IN MW')
+                    )
                         clean.loss = parseNum(row[key]);
-
                     if (upper.includes('DOWNTIME'))
                         clean.downtime = parseNum(row[key]);
 
@@ -819,7 +821,17 @@
         function updateKPIs(data) {
             const totalLoss = data.reduce((sum, r) => sum + r.loss, 0);
             const totalDowntime = data.reduce((sum, r) => sum + r.downtime, 0);
-            const avgLoss = data.length > 0 ? (totalLoss / data.length) : 0;
+
+            const incidentCount = data.filter(
+                r => r.downtime > 0
+            ).length;
+
+            const avgLoss = incidentCount > 0 ?
+                totalLoss / incidentCount :
+                0;
+            console.log("Total Loss:", totalLoss);
+            console.log("Incident Count:", incidentCount);
+            console.log("Avg Loss:", avgLoss);
 
             const mDataMap = {};
             data.forEach(r => {
